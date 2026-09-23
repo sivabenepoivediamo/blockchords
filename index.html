@@ -1,0 +1,2274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>blockchords</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  * { box-sizing: border-box; }
+
+  :root {
+    --bg: #0A0A0A;
+    --bg-raised: #151515;
+    --bg-raised-2: #1C1C1C;
+    --bg-inset: #050505;
+    --border: #2E2E2E;
+    --border-soft: #232323;
+    --fg: #F2F2F0;
+    --fg-dim: #9A9A96;
+    --fg-faint: #64645F;
+    --accent: #E8823A;
+    --accent-fg: #0A0A0A;
+    --accent-soft: rgba(232,130,58,0.12);
+    --title-block: #F2F2F0;
+    --title-chords: #64645F;
+    --key-white-top: #EDEDEA;
+    --key-white-mid: #D8D8D3;
+    --key-white-bottom: #c2c2bb;
+    --key-white-fg: #83837c;
+    --key-black-top: #2E2E2C;
+    --key-black-mid: #131311;
+    --key-black-bottom: #020202;
+    --note-inner: #4A4A47;
+    --note-doubling: #5B7080;
+    --note-dropped: #7A5B8E;
+    --note-alt: #C0603A;
+    --note-fg: #0A0A0A;
+    --focus-ring: var(--accent);
+  }
+
+  html[data-theme="light"] {
+    --bg: #FFFFFF;
+    --bg-raised: #F4F4F3;
+    --bg-raised-2: #ECECEA;
+    --bg-inset: #FAFAF9;
+    --border: #DCDCD9;
+    --border-soft: #E6E6E3;
+    --fg: #101010;
+    --fg-dim: #5B5B57;
+    --fg-faint: #8C8C86;
+    --accent: #2B5FD9;
+    --accent-fg: #FFFFFF;
+    --accent-soft: rgba(43,95,217,0.10);
+    --title-block: #101010;
+    --title-chords: #9A9A94;
+    --key-white-top: #FFFFFF;
+    --key-white-mid: #F0F0EE;
+    --key-white-bottom: #DEDEDA;
+    --key-white-fg: #9A9A94;
+    --key-black-top: #4A4A48;
+    --key-black-mid: #262624;
+    --key-black-bottom: #101010;
+    --note-inner: #8A8A84;
+    --note-doubling: #4C6C8C;
+    --note-dropped: #7A5B8E;
+    --note-alt: #B5502E;
+    --note-fg: #FFFFFF;
+    --focus-ring: var(--accent);
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  body {
+    padding: 28px 20px 48px;
+  }
+
+  input, select {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg-raised-2);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+
+  input:focus, select:focus, button:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+
+  select { cursor: pointer; }
+
+  label {
+    font-size: 11.5px;
+    color: var(--fg-dim);
+    display: block;
+    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  button {
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+  }
+
+  ::-webkit-scrollbar { height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--fg-faint); border-radius: 4px; }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  header { margin-bottom: 30px; position: relative; }
+
+  .theme-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px 5px 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--fg-dim);
+  }
+
+  .theme-toggle-switch {
+    width: 30px;
+    height: 17px;
+    border-radius: 9px;
+    background: var(--bg-raised-2);
+    border: 1px solid var(--border);
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .theme-toggle-switch .knob {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--accent);
+    transition: left 120ms ease;
+  }
+  html[data-theme="light"] .theme-toggle-switch .knob { left: 15px; }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  h1 .t-block { color: var(--title-block); }
+  h1 .t-chords { color: var(--title-chords); }
+
+  .explanation {
+    margin-top: 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    background: var(--bg-raised);
+    max-width: 620px;
+  }
+
+  .explanation summary {
+    cursor: pointer;
+    padding: 8px 14px;
+    font-size: 11.5px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--fg-dim);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    user-select: none;
+  }
+  .explanation summary::-webkit-details-marker { display: none; }
+  .explanation summary::before {
+    content: "▸";
+    font-size: 9px;
+    color: var(--accent);
+    display: inline-block;
+    transition: transform 120ms ease;
+  }
+  .explanation[open] summary::before { transform: rotate(90deg); }
+
+  .explanation p {
+    color: var(--fg-dim);
+    margin: 0;
+    padding: 0 14px 14px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .mode-tabs {
+    display: inline-flex;
+    margin-top: 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .mode-tab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 8px 16px;
+    background: var(--bg-raised);
+    color: var(--fg-dim);
+    cursor: pointer;
+    border: none;
+    border-right: 1px solid var(--border);
+    transition: background 100ms ease, color 100ms ease;
+  }
+  .mode-tab:last-child { border-right: none; }
+  .mode-tab.active {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+
+  .realtime-panel {
+    padding: 14px 22px;
+    background: var(--bg-raised);
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    margin-bottom: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+  }
+
+  .realtime-chord-readout {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    min-height: 16px;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+    padding: 20px 22px;
+    background: var(--bg-raised);
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+  }
+
+  .toggle-link {
+    float: right;
+    cursor: pointer;
+    color: var(--accent);
+  }
+
+  .sub-note {
+    font-size: 10.5px;
+    color: var(--fg-faint);
+    margin-top: 4px;
+  }
+
+  .scale-browser {
+    margin-top: 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-inset);
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .scale-cat {
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .scale-cat:last-child { border-bottom: none; }
+
+  .scale-cat-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--fg-dim);
+    background: var(--bg-raised);
+    user-select: none;
+  }
+  .scale-cat-header:hover { background: var(--bg-raised-2); }
+
+  .scale-cat-arrow {
+    font-size: 9px;
+    color: var(--accent);
+    transition: transform 120ms ease;
+    display: inline-block;
+    width: 8px;
+  }
+  .scale-cat.open .scale-cat-arrow { transform: rotate(90deg); }
+
+  .scale-cat-count {
+    margin-left: auto;
+    color: var(--fg-faint);
+    font-size: 10px;
+  }
+
+  .scale-cat-list {
+    display: none;
+  }
+  .scale-cat.open .scale-cat-list { display: block; }
+
+  .scale-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 10px 6px 22px;
+    cursor: pointer;
+    font-size: 11.5px;
+    color: var(--fg-dim);
+    border-top: 1px solid var(--bg-raised);
+  }
+  .scale-item:hover { background: var(--bg-raised-2); color: var(--fg); }
+  .scale-item.selected { background: var(--accent-soft); color: var(--fg); }
+
+  .scale-item-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .scale-item-degrees {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .scale-search {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .drop-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .drop-toggle {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--fg-dim);
+    margin: 0;
+  }
+  .drop-toggle.checked { color: var(--fg); }
+
+  .switch {
+    width: 30px;
+    height: 17px;
+    border-radius: 9px;
+    background: var(--bg-raised-2);
+    border: 1px solid var(--border);
+    position: relative;
+    flex-shrink: 0;
+    transition: background 120ms ease;
+  }
+  .switch.checked { background: var(--accent); border-color: var(--accent); }
+
+  .switch .knob {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--fg);
+    transition: left 120ms ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .switch.checked .knob { left: 15px; background: var(--accent-fg); }
+
+  .fixed-voices-note {
+    font-size: 12px;
+    color: var(--fg-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    padding-top: 4px;
+    margin-bottom: 14px;
+  }
+
+  #bpm { width: 90px; }
+
+  .play-row { margin-top: 14px; display: flex; gap: 8px; }
+
+  #playBtn {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: 5px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  #playBtn.playing { background: var(--note-alt); }
+  #playBtn:disabled { opacity: 0.4; cursor: default; }
+
+  .synth-loading {
+    font-size: 10.5px;
+    color: var(--fg-faint);
+    margin-top: 8px;
+  }
+
+  .melody-row { margin-bottom: 10px; }
+  .melody-input-line { display: flex; gap: 8px; }
+  .melody-input-line input { flex: 1; }
+
+  #clearBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--fg-dim);
+    border-radius: 5px;
+    padding: 0 14px;
+    font-size: 12.5px;
+  }
+
+  .keyboard-panel {
+    margin-bottom: 30px;
+    margin-top: 16px;
+    padding: 18px 22px 22px;
+    background: var(--bg-inset);
+    border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 0 30px rgba(0,0,0,0.2);
+  }
+
+  .piano {
+    position: relative;
+    width: 100%;
+    height: 108px;
+    user-select: none;
+    border-radius: 0 0 6px 6px;
+    overflow: visible;
+  }
+
+  .white-key, .black-key {
+    position: absolute;
+    top: 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: background 60ms ease;
+  }
+
+  .white-key {
+    height: 100%;
+    background: var(--key-white-mid);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 6px;
+    font-size: 9px;
+    color: var(--key-white-fg);
+    font-family: 'IBM Plex Mono', monospace;
+    z-index: 1;
+  }
+  .white-key.active {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  .white-key.pressed {
+    background: var(--key-white-bottom);
+  }
+
+  .black-key {
+    height: 60%;
+    background: var(--key-black-mid);
+    border: 1px solid var(--key-black-bottom);
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+    z-index: 2;
+  }
+  .black-key.active {
+    background: var(--accent);
+  }
+  .black-key.pressed {
+    background: var(--key-black-bottom);
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--fg-faint);
+    font-size: 13.5px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+  }
+
+  .results-panel {
+    background: var(--bg-raised);
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    padding: 24px 20px 18px;
+    overflow-x: auto;
+  }
+
+  .results-panel.idle .chord-row {
+    visibility: hidden;
+  }
+
+  .chord-row {
+    display: flex;
+    gap: 6px;
+    min-width: fit-content;
+    height: 300px;
+  }
+
+  .chord-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 74px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .chord-col-inner {
+    height: 240px;
+    width: 100%;
+    position: relative;
+    border-left: 1px solid var(--border);
+    background: transparent;
+    transition: background 120ms ease;
+  }
+  .chord-col-inner.playing {
+    background: var(--accent-soft);
+  }
+
+  .note-bar {
+    position: absolute;
+    left: 12%;
+    width: 76%;
+    height: 11px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8.5px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--note-fg);
+    font-weight: 600;
+  }
+
+  .col-index {
+    margin-top: 8px;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--fg-dim);
+    text-align: center;
+  }
+
+  .col-tritone {
+    margin-top: 3px;
+    font-size: 8.5px;
+    color: var(--note-alt);
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .col-method {
+    margin-top: 3px;
+    font-size: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .col-method.base { color: var(--accent); }
+  .col-method.thirds { color: var(--fg-dim); }
+
+  .col-alteration {
+    margin-top: 3px;
+    font-size: 8.5px;
+    color: var(--note-alt);
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: center;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 10.5px;
+    color: var(--fg-dim);
+    flex-wrap: wrap;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+
+  .legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  .legend-swatch.outline {
+    background: transparent !important;
+    border: 1.5px solid;
+  }
+
+  .table-panel { margin-top: 24px; }
+
+  .table-box {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 14px 18px;
+    overflow-x: auto;
+  }
+
+  .table-row {
+    display: flex;
+    gap: 14px;
+    padding: 4px 0;
+    white-space: nowrap;
+    color: var(--fg-dim);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .table-row:last-child { border-bottom: none; }
+
+  .table-idx { color: var(--fg-faint); width: 20px; }
+  .table-melody { color: var(--accent); width: 90px; }
+  .table-method { color: var(--fg-dim); width: 78px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="theme-toggle" id="themeToggle">
+      <span class="theme-toggle-switch" id="themeToggleSwitch"><span class="knob"></span></span>
+      <span id="themeToggleLabel">dark</span>
+    </div>
+    <h1><span class="t-block">block</span><span class="t-chords">chords</span></h1>
+    <details class="explanation">
+      <summary>what this does</summary>
+      <p>this is a lazy tool for harmonizing a melody with block chords: notes that belong to the base chord shape use its inversion which has them as the top voice; other scale degrees are harmonized with descending thirds along the scale. voices making a tritone with the melody are corrected by a scale step. notes outside the scale and the base shape are harmonized as a chromatic alteration of the nearest in-scale chord, optionally transposed.</p>
+    </details>
+    <div class="mode-tabs">
+      <button type="button" class="mode-tab active" id="modeRealtimeTab">real-time</button>
+      <button type="button" class="mode-tab" id="modeWrittenTab">write</button>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div>
+      <label for="rootSelect">Root</label>
+      <select id="rootSelect" style="width:100%"></select>
+
+      <div style="margin-top:12px">
+        <label>scale</label>
+        <input id="scaleCustomInput" style="width:100%" placeholder="0 2 4 5 7 9 11" />
+        <div id="scaleBrowserPanel">
+          <input id="scaleSearchInput" class="scale-search" placeholder="search scales…" />
+          <div class="scale-browser" id="scaleBrowser"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label>base shape</label>
+      <input id="shapeCustomInput" style="width:100%" placeholder="0 4 7 9" />
+      <div id="shapeBrowserPanel">
+        <input id="shapeSearchInput" class="scale-search" placeholder="search chords…" />
+        <div class="scale-browser" id="shapeBrowser"></div>
+      </div>
+    </div>
+
+    <div id="playbackControls" style="display:none">
+      <label for="bpm">tempo (bpm)</label>
+      <input id="bpm" type="number" min="30" max="220" value="96" />
+      <div class="play-row">
+        <button id="playBtn">play</button>
+      </div>
+      <div class="synth-loading" id="synthLoading">loading synthesizer…</div>
+    </div>
+  </div>
+
+  <div class="controls voicing-options">
+    <div>
+      <label>drop voicings</label>
+      <div class="drop-toggles">
+        <div class="drop-toggle" id="dropV2Toggle">
+          <span class="switch"><span class="knob"></span></span>
+          drop 2
+        </div>
+        <div class="drop-toggle" id="dropV3Toggle">
+          <span class="switch"><span class="knob"></span></span>
+          drop 3
+        </div>
+        <div class="drop-toggle" id="dropV4Toggle">
+          <span class="switch"><span class="knob"></span></span>
+          drop 4
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label>out-of-scale notes</label>
+      <div class="drop-toggles">
+        <div class="drop-toggle" id="transposeWholeChordToggle">
+          <span class="switch"><span class="knob"></span></span>
+          transpose whole chord
+        </div>
+      </div>
+      <div class="sub-note">on: out-of-scale and out-of-chord notes make the whole chord transpose. off: only the melody note is altered, rest of the chord stays as harmonized for the nearest in-scale note.</div>
+    </div>
+  </div>
+
+  <div class="melody-row" id="writtenModeControls" style="display:none">
+    <label for="melodyInput">melody (MIDI numbers or names like C5, D#4 — separated by space or comma)</label>
+    <div class="melody-input-line">
+      <input id="melodyInput" value="72 74 76 77 79 81 83 84" />
+      <button id="clearBtn">clear</button>
+    </div>
+  </div>
+
+  <div class="realtime-panel" id="realtimeModeControls" style="display:flex">
+    <div class="realtime-chord-readout" id="realtimeChordReadout"></div>
+    <div class="realtime-chord-readout" id="realtimeOctaveReadout"></div>
+  </div>
+
+  <div class="keyboard-panel">
+    <div class="piano" id="piano"></div>
+  </div>
+
+
+
+  <div id="realtimeEmptyState" class="empty-state" style="display:none">
+    play a note to see its chord.
+  </div>
+
+  <div id="resultsPanel" class="results-panel idle">
+    <div class="chord-row" id="chordRow"></div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--accent)"></span>melody</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--note-inner)"></span>inner voice</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--note-doubling)"></span>doubling (octave below)</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--note-dropped)"></span>dropped voice</div>
+      <div class="legend-item"><span class="legend-swatch outline" style="border-color:var(--note-alt)"></span>tritone correction / out-of-scale alteration</div>
+    </div>
+  </div>
+
+  <div class="table-panel" id="tablePanel">
+    <label>details</label>
+    <div class="table-box" id="tableBox"></div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ============================================================
+  // Music theory core
+  // ============================================================
+
+  function mod(n, m) { return ((n % m) + m) % m; }
+
+  function scalePitchClasses(scale) {
+    return scale.steps.map((s) => mod(scale.root + s, 12));
+  }
+
+  function noteToPc(note) { return mod(note, 12); }
+
+  function scaleDegreeIndexOfPc(pc, scale) {
+    const pcs = scalePitchClasses(scale);
+    return pcs.indexOf(mod(pc, 12));
+  }
+
+  function absoluteScalePosition(note, scale) {
+    const pc = noteToPc(note);
+    const degIdx = scaleDegreeIndexOfPc(pc, scale);
+    if (degIdx === -1) return null;
+    const octave = Math.floor((note - scale.root) / 12);
+    return octave * scale.steps.length + degIdx;
+  }
+
+  function scalePositionToNote(pos, scale) {
+    const n = scale.steps.length;
+    const octave = Math.floor(pos / n);
+    const degIdx = mod(pos, n);
+    return scale.root + octave * 12 + scale.steps[degIdx];
+  }
+
+  function stepInScale(note, scale, count) {
+    const pos = absoluteScalePosition(note, scale);
+    if (pos === null) return null;
+    return scalePositionToNote(pos + count, scale);
+  }
+
+  function isTritone(a, b) { return mod(a - b, 12) === 6; }
+
+  // For a pitch class that is NOT in the scale, find the nearest in-scale
+  // pitch class by chromatic (semitone) distance, and the signed alteration
+  // (in semitones) that moves the in-scale pc to the given out-of-scale pc.
+  // e.g. in C harmonic minor {0,2,3,5,7,8,11}, pc 4 (E) is out of scale;
+  // nearest in-scale pc is 3 (Eb), alteration = +1 (Eb raised to E).
+  // Ties (equally close above/below) resolve toward the lower neighbor,
+  // i.e. treating the out-of-scale note as a raised (sharped) version of
+  // the note below it.
+  function nearestInScalePcAndAlteration(pc, scale) {
+    const pcs = scalePitchClasses(scale);
+    if (pcs.includes(pc)) return { inScalePc: pc, alteration: 0 };
+
+    let best = null;
+    for (let dist = 1; dist <= 6; dist++) {
+      const down = mod(pc - dist, 12); // in-scale pc below, alteration = +dist
+      const up = mod(pc + dist, 12);   // in-scale pc above, alteration = -dist
+      const downMatch = pcs.includes(down);
+      const upMatch = pcs.includes(up);
+      if (downMatch) { best = { inScalePc: down, alteration: dist }; }
+      if (!best && upMatch) { best = { inScalePc: up, alteration: -dist }; }
+      if (best) break;
+    }
+    return best;
+  }
+
+  function harmonizeBaseShape(melodyNote, scale, baseShape, voiceCount) {
+    const melodyPc = noteToPc(melodyNote);
+    const shapePcs = baseShape.map((iv) => mod(scale.root + iv, 12));
+    const idxInShape = shapePcs.indexOf(melodyPc);
+    if (idxInShape === -1) return null;
+
+    const others = [];
+    for (let i = 1; i < shapePcs.length; i++) {
+      others.push(shapePcs[mod(idxInShape - i, shapePcs.length)]);
+    }
+
+    const voices = [melodyNote];
+    let prev = melodyNote;
+    for (let i = 0; i < voiceCount - 1 && i < others.length; i++) {
+      const pc = others[i];
+      let candidate = prev - 1;
+      while (mod(candidate, 12) !== pc) candidate--;
+      voices.push(candidate);
+      prev = candidate;
+    }
+    return voices;
+  }
+
+  function harmonizeMelodyNote(melodyNote, scale, baseShape, voiceCount, transposeWholeChord) {
+    const melodyPc = noteToPc(melodyNote);
+    const scalePcs = scalePitchClasses(scale);
+    let alteration = 0;
+    let referenceNote = melodyNote;
+
+    // A melody note that is out of scale but IS a pitch class of the base
+    // shape itself still harmonizes directly as an inversion of the base
+    // shape — no alteration needed, since the shape already "contains" it.
+    // e.g. base shape 0 3 6 9 over scale 0 2 3 5 8 11: A (pc 9) isn't in
+    // the scale, but it IS the top note of the shape, so it harmonizes as
+    // that inversion (C Eb F# A), same as any other shape tone.
+    const shapePcs = baseShape.map((iv) => mod(scale.root + iv, 12));
+    const inShape = shapePcs.includes(melodyPc);
+
+    // Otherwise, an out-of-scale melody note is harmonized as an
+    // alteration of the nearest in-scale pitch class. If transposeWholeChord
+    // is on, the whole resulting chord shifts by the alteration so every
+    // voice carries the same chromatic change as the melody note (e.g. E
+    // over C harmonic minor harmonizes as the Eb chord, transposed up a
+    // semitone, so every "Eb" becomes "E"). If off, only the melody note
+    // itself is altered; the rest of the chord stays exactly as harmonized
+    // for the in-scale neighbor.
+    if (!inShape && !scalePcs.includes(melodyPc)) {
+      const nearest = nearestInScalePcAndAlteration(melodyPc, scale);
+      if (nearest) alteration = nearest.alteration;
+      referenceNote = melodyNote - alteration;
+    }
+
+    const baseResult = harmonizeBaseShape(referenceNote, scale, baseShape, voiceCount);
+    let voices, method, tritoneCorrections = [];
+
+    if (baseResult) {
+      voices = baseResult;
+      method = "baseShape";
+    } else {
+      voices = [referenceNote];
+      let current = referenceNote;
+      for (let i = 0; i < voiceCount - 1; i++) {
+        let next = stepInScale(current, scale, -2);
+        if (next === null) break;
+        if (isTritone(next, referenceNote)) {
+          const original = next;
+          next = stepInScale(next, scale, 1);
+          tritoneCorrections.push({ from: original, to: next });
+        }
+        voices.push(next);
+        current = next;
+      }
+      method = "descendingThirds";
+    }
+
+    if (alteration !== 0) {
+      if (transposeWholeChord) {
+        voices = voices.map((n) => n + alteration);
+        tritoneCorrections = tritoneCorrections.map((c) => ({ from: c.from + alteration, to: c.to + alteration }));
+      } else {
+        voices = [melodyNote, ...voices.slice(1)];
+      }
+    }
+
+    const doubling = melodyNote - 12;
+    const fullChord = [...voices, doubling];
+
+    return { melodyNote, voices, fullChord, method, tritoneCorrections, alteration };
+  }
+
+  function harmonizeMelody(melody, scale, baseShape, voiceCount, transposeWholeChord) {
+    return melody.map((n) => harmonizeMelodyNote(n, scale, baseShape, voiceCount, transposeWholeChord));
+  }
+
+  // Drop voicing: with 5 fixed voices [melody, v2, v3, v4, bassDoubling],
+  // each of v2/v3/v4 can be independently dropped one octave below the
+  // bass doubling. Voices that stay put remain in close position under
+  // the melody. Voices that drop go below the bass doubling, preserving
+  // their original relative order (v2 above v3 above v4), each an
+  // octave down.
+  function applyDrop(result, dropFlags) {
+    const { voices, fullChord } = result;
+    const bassDoubling = fullChord[fullChord.length - 1];
+
+    if (voices.length < 4) {
+      return { ...result, droppedChord: fullChord, droppedIndices: [] };
+    }
+
+    const { v2, v3, v4 } = dropFlags || {};
+    const flags = [v2, v3, v4];
+
+    const kept = [voices[0]];
+    const droppedIndices = [];
+    const droppedNotes = [];
+
+    for (let i = 1; i <= 3; i++) {
+      if (flags[i - 1]) {
+        droppedIndices.push(i);
+        droppedNotes.push(voices[i] - 12);
+      } else {
+        kept.push(voices[i]);
+      }
+    }
+
+    const droppedChord = [...kept, bassDoubling, ...droppedNotes];
+
+    return { ...result, droppedChord, droppedIndices, droppedNotes };
+  }
+
+  // ============================================================
+  // Note naming / parsing helpers
+  // ============================================================
+
+  const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+  function midiToName(n) {
+    const pc = mod(n, 12);
+    const oct = Math.floor(n / 12) - 1;
+    return `${NOTE_NAMES[pc]}${oct}`;
+  }
+
+  function parseNoteToken(token) {
+    const t = token.trim();
+    if (t === "") return null;
+    if (/^-?\d+$/.test(t)) return parseInt(t, 10);
+    const m = t.match(/^([A-Ga-g])([#b]?)(-?\d+)$/);
+    if (!m) return null;
+    const letterMap = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+    let pc = letterMap[m[1].toUpperCase()];
+    if (m[2] === "#") pc += 1;
+    if (m[2] === "b") pc -= 1;
+    const octave = parseInt(m[3], 10);
+    return (octave + 1) * 12 + pc;
+  }
+
+  function parseMelodyString(str) {
+    return str
+      .split(/[\s,;]+/)
+      .map(parseNoteToken)
+      .filter((n) => n !== null && !isNaN(n));
+  }
+
+  function parseDegreesString(str) {
+    return str
+      .split(/[\s,;]+/)
+      .map((t) => t.trim())
+      .filter((t) => t !== "")
+      .map((t) => parseInt(t, 10))
+      .filter((n) => !isNaN(n));
+  }
+
+  const ROOT_NAMES = NOTE_NAMES;
+
+  // Base shape presets removed; base shape is entered directly as
+  // intervals (e.g. "0 3 7 9") via the custom input.
+
+  const SCALE_LIBRARY = [
+    { cat: "Major and minor", scales: [
+      ["Ionian (Major)",        [0,2,4,5,7,9,11]],
+      ["Dorian",                [0,2,3,5,7,9,10]],
+      ["Phrygian",              [0,1,3,5,7,8,10]],
+      ["Lydian",                [0,2,4,6,7,9,11]],
+      ["Mixolydian",            [0,2,4,5,7,9,10]],
+      ["Aeolian (Natural Minor)",[0,2,3,5,7,8,10]],
+      ["Locrian",               [0,1,3,5,6,8,10]],
+      ["Melodic Minor",         [0,2,3,5,7,9,11]],
+      ["Dorian b2",             [0,1,3,5,7,9,10]],
+      ["Lydian Augmented",      [0,2,4,6,8,9,11]],
+      ["Lydian Dominant",       [0,2,4,6,7,9,10]],
+      ["Melodic Major",         [0,2,4,5,7,8,10]],
+      ["Half Diminished",       [0,2,3,5,6,8,10]],
+      ["Altered Dominant",      [0,1,3,4,6,8,10]],
+      ["Harmonic Minor",        [0,2,3,5,7,8,11]],
+      ["Locrian #6",            [0,1,3,5,6,9,10]],
+      ["Ionian Augmented",      [0,2,4,5,8,9,11]],
+      ["Romanian Minor",        [0,2,3,6,7,9,10]],
+      ["Phrygian Dominant",     [0,1,4,5,7,8,10]],
+      ["Lydian #2",             [0,3,4,6,7,9,11]],
+      ["Ultralocrian",          [0,1,3,4,6,8,9]],
+    ]},
+    { cat: "European", scales: [
+      ["Adonai Malakh",              [0,1,2,3,5,7,9,10]],
+      ["Enigmatic (asc)",            [0,1,4,6,8,10,11]],
+      ["Enigmatic (desc)",           [0,1,4,5,8,10,11]],
+      ["Enigmatic Minor",            [0,1,3,6,8,10,11]],
+      ["Enigmatic Mixed",            [0,1,4,5,6,8,10,11]],
+      ["Flamenco",                   [0,1,3,4,5,7,8,10]],
+      ["Gypsy",                      [0,2,3,6,7,8,10]],
+      ["Gypsy Hexatonic",            [0,1,4,5,7,8,9]],
+      ["Gypsy Inverse",              [0,1,4,5,7,9,11]],
+      ["Gypsy Minor",                [0,2,3,6,7,8,11]],
+      ["Hijaz Major",                [0,1,5,6,8,9,10]],
+      ["Houseini",                   [0,2,3,4,5,7,8,9,10]],
+      ["Houzam",                     [0,3,4,5,7,9,11]],
+      ["Hungarian Major",            [0,3,4,6,7,9,10]],
+      ["Hungarian Major Inverse",    [0,2,3,5,6,8,9]],
+      ["Hungarian Minor b2",         [0,1,2,3,6,7,8,11]],
+      ["Istrian",                    [0,1,3,4,6,7]],
+      ["Jeths",                      [0,2,3,5,6,9,11]],
+      ["Kiourdi",                    [0,2,3,5,6,7,8,9,10]],
+      ["Magen Abot",                 [0,1,3,4,6,8,9,11]],
+      ["Moorish Phrygian",           [0,1,3,4,5,7,8,10,11]],
+      ["Neapolitan Major",           [0,1,3,5,7,9,11]],
+      ["Neapolitan Major b4",        [0,1,3,4,7,9,11]],
+      ["Neapolitan Major b5",        [0,1,3,5,6,9,11]],
+      ["Neapolitan Minor",           [0,1,3,5,7,8,11]],
+      ["Harmonic Neapolitan Minor",  [0,1,2,3,5,7,8,11]],
+      ["Neseveri",                   [0,1,3,6,7,8,10,11]],
+      ["Prokofiev",                  [0,1,3,5,6,8,10,11]],
+      ["Prometheus",                 [0,2,4,6,9,10]],
+      ["Prometheus Neapolitan",      [0,1,4,6,9,10]],
+      ["Romanian Major",             [0,1,4,6,7,9,10]],
+      ["Sabach",                     [0,2,3,4,7,8,10]],
+      ["Sabach Maj7",                [0,2,3,4,7,8,11]],
+      ["Scottish Hexatonic",         [0,2,4,5,7,9]],
+      ["Sengiach",                   [0,3,4,5,7,8,11]],
+      ["Shostakovich",               [0,1,3,4,6,7,9,11]],
+      ["Spanish Heptatonic",         [0,3,4,5,6,8,10]],
+      ["Spanish Octatonic",          [0,1,3,4,5,6,8,10]],
+    ]},
+    { cat: "Asian", scales: [
+      ["Honkoshi",             [0,1,3,5,6,10]],
+      ["Ichilkotsucho",        [0,2,4,5,6,7,9,11]],
+      ["Insen",                [0,1,5,7,8,10]],
+      ["Maqam Shadd'araban",   [0,1,3,4,5,6,9,10]],
+      ["Maqam Hijaz",          [0,1,4,5,7,8,10,11]],
+      ["Maqam Shawq Afza",     [0,2,3,4,5,6,7,8,9,11]],
+      ["Maqam Tarzanuyn",      [0,1,3,4,5,6,7,8,9,10]],
+      ["Nando-Kyemyonjo",      [0,2,3,5,7]],
+      ["Noh",                  [0,2,5,7,8,9,11]],
+      ["Nohkan",               [0,2,5,6,8,9,11]],
+      ["Oriental",             [0,1,4,5,6,9,10]],
+      ["Oriental 2",           [0,1,4,5,6,9,10,11]],
+      ["Pelog",                [0,2,4,6,7,8,11]],
+      ["Persian",              [0,1,4,5,6,8,11]],
+      ["Ritzu",                [0,1,3,5,8,10]],
+      ["Sho",                  [0,2,3,5,7,9]],
+      ["Sho #2",               [0,1,3,4,6,10]],
+      ["Takemitzu Tree 1",     [0,2,3,6,8,11]],
+      ["Takemitzu Tree 2",     [0,2,3,6,8,10]],
+      ["Youlan",               [0,1,2,4,5,6,7,9,10]],
+    ]},
+    { cat: "Indian", scales: [
+      ["Mela Bhavapriya",[0,1,3,6,7,8,10]],["Mela Calanata",[0,3,4,5,7,10]],
+      ["Mela Dhavalambari",[0,1,4,6,7,8,9]],["Mela Dhatuvardhani",[0,3,4,6,7,8,11]],
+      ["Mela Divyamani",[0,1,3,6,7,10,11]],["Mela Ganamurti",[0,1,2,5,7,8,11]],
+      ["Mela Gavambodhi",[0,1,3,6,7,8,9]],["Mela Gayakapriya",[0,1,4,5,7,9,10,11]],
+      ["Mela Hatakambari",[0,1,4,5,7,10,11]],["Mela Jalarnava",[0,1,2,5,6,7,9,11]],
+      ["Mela Jhalavarli",[0,1,2,5,6,7,10,11]],["Mela Jhankaradhvani",[0,2,3,5,7,8,9]],
+      ["Mela Jyotisvarupini",[0,3,4,6,7,8,10]],["Mela Kantamani",[0,2,4,6,7,8,9]],
+      ["Mela Manavati",[0,1,2,5,7,9,11]],["Mela Naganandini",[0,2,4,5,7,10,11]],
+      ["Mela Namanarayani",[0,1,4,6,7,8,10]],["Mela Navanitam",[0,1,2,6,7,9,10]],
+      ["Mela Nitimati",[0,2,3,6,7,10,11]],["Mela Pavani",[0,1,2,6,7,9,11]],
+      ["Mela Ragavardhani",[0,3,4,5,7,8,10]],["Mela Raghupriya",[0,1,2,6,7,10,11]],
+      ["Mela Ratnangi",[0,1,2,5,7,8,10]],["Mela Rupavati",[0,1,3,5,7,10,11]],
+      ["Mela Salaga",[0,1,2,6,7,8,9]],["Mela Syamalangi",[0,2,3,6,7,8,9]],
+      ["Mela Suvarnangi",[0,1,3,6,7,9,11]],["Mela Tenarupi",[0,1,2,5,7,10,11]],
+      ["Mela Venaspati",[0,1,2,5,7,9,10]],["Mela Varunapriya",[0,2,3,5,7,10,11]],
+      ["Mela Visvambhari",[0,1,4,6,7,10,11]],["Mela Yagapriya",[0,3,4,5,7,8,9]],
+      ["Raga Abhogi",[0,2,3,5,9]],["Raga Aivarati",[0,2,4,6,7,9]],
+      ["Raga Amarasenapriya",[0,2,3,6,7,11]],["Raga Audav Tukhari",[0,2,3,5,8]],
+      ["Raga Bhatiyar",[0,1,4,5,6,7,9,11]],["Raga Bhinna Pancama",[0,2,5,7,8,11]],
+      ["Raga Brindabani",[0,2,5,7,10,11]],["Raga Bowli (asc)",[0,1,4,7,8]],
+      ["Raga Bowli (desc)",[0,1,4,7,8,11]],["Raga Budhamanohari",[0,2,4,5,7]],
+      ["Raga Chandrajyoti",[0,1,2,6,7,9]],["Raga Chandrakauns Kafi",[0,3,5,9,10]],
+      ["Raga Chandrakauns Kiravani",[0,3,5,8,11]],["Raga Chandrakauns Modern",[0,3,5,9,11]],
+      ["Raga Chaya Todi",[0,1,3,6,8]],["Raga Chinthamani",[0,2,3,6,7,8,9,10]],
+      ["Raga Deshgaur",[0,1,7,8,11]],["Raga Devaranjani",[0,5,7,8,11]],
+      ["Raga Dhavalangam",[0,1,4,6,7,8]],["Raga Dhavalashri",[0,4,6,7,9]],
+      ["Raga Dipak",[0,2,4,5,6,7]],["Raga Gamakakriya",[0,1,4,6,7,11]],
+      ["Raga Gandharavam",[0,1,3,5,7,10]],["Raga Gangatarangini",[0,4,5,6,8,11]],
+      ["Raga Gaula",[0,1,4,5,7,10]],["Raga Gaurikriya",[0,3,6,7,10,11]],
+      ["Raga Ghantana",[0,2,3,5,8,11]],["Raga Gopikatilaka",[0,2,3,6,7,10]],
+      ["Raga Gowla (asc)",[0,1,5,7,11]],["Raga Gowla (desc)",[0,1,4,5,7,11]],
+      ["Raga Gurjari Todi",[0,1,3,6,8,10]],["Raga Hamsadhvani",[0,2,3,7,11]],
+      ["Raga Hansanandi",[0,1,4,6,9,11]],["Raga Hamsa Vinodini",[0,2,4,5,9,11]],
+      ["Raga Hari Nata",[0,4,5,7,9,11]],["Raga Hejjajji",[0,1,4,6,8,9]],
+      ["Raga Jaganmohanam",[0,2,6,7,8,10]],["Raga Jivantika",[0,1,5,7,9,11]],
+      ["Raga Jyoty",[0,4,6,7,8,10]],["Raga Kalagada",[0,1,4,7,8,9]],
+      ["Raga Kalakanthi",[0,2,3,7,8,9]],["Raga Kalavati",[0,1,4,5,7,9]],
+      ["Raga Kamalamanohari",[0,2,6,7,9,10]],["Raga Kashyapi",[0,1,3,7,8,10]],
+      ["Raga Kedaram (asc)",[0,4,5,7,11]],["Raga Kedaram (desc)",[0,2,4,5,7,11]],
+      ["Raga Khamach (asc)",[0,4,5,7,9,10,11]],["Raga Khamach (desc)",[0,2,4,5,7,9,10]],
+      ["Raga Kshanika",[0,1,5,8,11]],["Raga Kumarapriya",[0,1,2,8,11]],
+      ["Raga Kumurdaki",[0,2,4,6,11]],["Raga Kuntvarali",[0,5,7,9,10]],
+      ["Raga Lalita",[0,1,4,5,8,11]],["Raga Lalita Bhairav",[0,1,4,5,8,10]],
+      ["Raga Latika",[0,2,4,7,8,11]],["Raga Madhukauns",[0,3,6,7,9,10]],
+      ["Raga Malarani",[0,2,6,7,10,11]],["Raga Malayamarutam",[0,1,4,7,9,10]],
+      ["Raga Malahari (asc)",[0,1,5,7,8]],["Raga Malahari (desc)",[0,1,4,5,7,8]],
+      ["Raga Malkauns",[0,3,5,8,10,11]],["Raga Malini",[0,1,3,5,7,8,9]],
+      ["Raga Manaranjani",[0,1,4,7,10]],["Raga Manavi",[0,2,3,7,9,10]],
+      ["Raga Manohari",[0,3,5,7,9,10]],["Raga Marwa Thaat",[0,1,4,6,7,9,11]],
+      ["Raga Matha Kokila",[0,2,7,9,10]],["Raga Megharamji",[0,1,4,5,11]],
+      ["Raga Miam Ki Malhar",[0,2,3,5,7,9,10,11]],["Raga Mohanangi",[0,3,4,7,9]],
+      ["Raga Mruganandana",[0,2,4,6,9,11]],["Raga Multani",[0,2,5,8,9,11]],
+      ["Raga Nabhomani",[0,1,2,6,7]],["Raga Nagagandhari",[0,2,5,7,9,11]],
+      ["Raga Nattai (asc)",[0,3,4,5,7,10,11]],["Raga Nattai (desc)",[0,3,5,7,11]],
+      ["Raga Nattaikurinji",[0,2,4,5,9,10]],["Raga Navamanohari",[0,2,5,7,8,10]],
+      ["Raga Neroshta",[0,2,4,9,11]],["Raga Nishadi",[0,2,6,7,9,11]],
+      ["Raga Padi",[0,1,5,7,8,11]],["Raga Pahadi",[0,2,4,5,7,8,9,10,11]],
+      ["Raga Paras (asc)",[0,4,5,7,8,11]],["Raga Paras (desc)",[0,1,4,5,7,8,11]],
+      ["Raga Priyadharshini",[0,2,5,8,11]],["Raga Puruhutika",[0,5,7,9,11]],
+      ["Raga Putrika",[0,1,2,8,9]],["Raga Rageshri",[0,2,4,5,9,10,11]],
+      ["Raga Ramkali",[0,1,4,5,6,7,8,11]],["Raga Rangini",[0,2,3,6,9,11]],
+      ["Raga Rasamanjari",[0,2,5,6,8,9,11]],["Raga Rasavali",[0,1,5,7,9,10]],
+      ["Raga Rasranjani",[0,2,5,9,11]],["Raga Ratnakanthi",[0,2,4,6,7,11]],
+      ["Raga Rudra Pancama",[0,1,4,5,9,10]],["Raga Rukmangi",[0,1,3,7,10]],
+      ["Raga Salagavarali",[0,1,3,7,9,10]],["Raga Samudhra Priya",[0,3,6,7,10]],
+      ["Raga Santanamanjari",[0,3,4,6,7,8,9]],["Raga Sarasanana",[0,2,4,5,8,11]],
+      ["Raga Sarasvati",[0,2,6,7,9,10]],["Raga Saravati",[0,4,5,7,8,9]],
+      ["Raga Saugandhini",[0,1,6,7,8]],["Raga Saurashtra",[0,1,4,5,7,8,9,11]],
+      ["Raga Shreeranjani",[0,2,3,5,9,10]],["Raga Shri Kalyan",[0,2,6,7,9]],
+      ["Raga Shubravarni",[0,2,6,9,10]],["Raga Sindhura Kafi",[0,2,3,5,7,11]],
+      ["Raga Sindhi-Bhairavi",[0,1,2,3,4,5,7,8,10,11]],["Raga Siva Kambhoji",[0,2,4,5,7,10]],
+      ["Raga Sorati",[0,2,5,7,9,10,11]],["Raga Suddha Mukhari",[0,1,2,5,8,9]],
+      ["Raga Suddha Simantini",[0,1,3,5,7,8]],["Raga Syamalam",[0,2,3,6,7,8]],
+      ["Raga Takka",[0,3,5,7,8,11]],["Raga Tilang",[0,4,5,7,10,11]],
+      ["Raga Trimurti",[0,2,3,7,8,10]],["Raga Valaji",[0,4,7,9,10]],
+      ["Raga Vasanta (asc)",[0,4,5,9,11]],["Raga Vasanta (desc)",[0,1,4,5,9,11]],
+      ["Raga Vegavahini (asc)",[0,4,5,7,9,10]],["Raga Vegavahini (desc)",[0,1,4,5,7,9,10]],
+      ["Raga Vijayanagari",[0,2,3,6,7,9]],["Raga Vijayasri",[0,1,2,6,7,11]],
+      ["Raga Vijayavasanta",[0,4,6,7,10,11]],["Raga Viyogavarali",[0,1,3,5,8,11]],
+      ["Raga Vutari",[0,4,6,7,9,10]],["Raga Zilaf",[0,4,6,7,9,10]],
+    ]},
+    { cat: "Pentatonic", scales: [
+      ["Major Pentatonic",               [0,2,4,7,9]],
+      ["Suspended Pentatonic",           [0,2,5,7,10]],
+      ["Man Gong",                       [0,3,5,8,10]],
+      ["Ritusen",                        [0,2,5,7,9]],
+      ["Minor Pentatonic",               [0,3,5,7,10]],
+      ["Dorian Pentatonic",              [0,2,3,7,9]],
+      ["Kokin-Choshi",                   [0,1,5,7,10]],
+      ["Raga Hindol",                    [0,4,6,9,11]],
+      ["Han-Kumoi",                      [0,2,5,7,8]],
+      ["Minor Pentatonic 7 b5",          [0,3,5,6,10]],
+      ["Ionian Pentatonic",              [0,4,5,7,11]],
+      ["Pelog Pentatonic",               [0,1,3,7,8]],
+      ["Raga Hamsanada",                 [0,2,6,7,11]],
+      ["Raga Khamaji Durga",             [0,4,5,9,10]],
+      ["Dominant Pentatonic",            [0,2,4,7,10]],
+      ["Chaio",                          [0,2,5,8,10]],
+      ["Chin",                           [0,3,6,8,10]],
+      ["Kyemyonjo",                      [0,3,5,7,9]],
+      ["Kung",                           [0,2,4,6,9]],
+      ["In",                             [0,1,5,7,8]],
+      ["Hirajoshi",                      [0,4,6,7,11]],
+      ["Ake-Bono",                       [0,2,3,7,8]],
+      ["Iwato",                          [0,1,5,6,10]],
+      ["Major Pentatonic b2",            [0,1,4,7,9]],
+      ["Major Pentatonic b2 b5",         [0,1,4,6,9]],
+      ["Major Pentatonic b3",            [0,1,3,6,9]],
+      ["Major Pentatonic b6",            [0,2,4,7,8]],
+      ["Major Pentatonic b7 #9",         [0,3,4,7,10]],
+      ["Mixolydian Pentatonic",          [0,4,5,7,10]],
+      ["Tcherepnin Major Pentatonic",    [0,2,5,7,11]],
+      ["Altered Pentatonic",             [0,1,5,7,9]],
+      ["Locrian Pentatonic",             [0,3,4,6,10]],
+      ["Pentatonic Whole-Tone",          [0,4,6,8,10]],
+      ["Center-Cluster PentaMirror",     [0,3,4,5,8]],
+      ["Raga Nagaswaravali",             [0,4,5,7,9]],
+      ["Raga Chitthakarshini",           [0,1,3,5,8]],
+      ["Raga Hamsadhvani 2",             [0,2,4,7,11]],
+      ["Pyeong Jo",                      [0,2,5,9,10]],
+      ["Raga Shailaja",                  [0,3,7,8,10]],
+      ["Pygmy",                          [0,2,3,7,10]],
+      ["Raga Mamata",                    [0,4,7,9,11]],
+      ["Raga Kokil Pancham",             [0,3,5,7,8]],
+      ["Romanian Bacovia",               [0,4,5,8,11]],
+      ["Syrian Pentatonic",              [0,1,4,5,8]],
+    ]},
+    { cat: "Modal", scales: [
+      ["Ionian b5",                       [0,2,4,5,6,9,11]],
+      ["Ionian #5",                       [0,2,4,5,8,9,11]],
+      ["Ionian Augmented #2",             [0,3,4,5,8,9,11]],
+      ["Ionian Augmented b9",             [0,1,4,5,8,9,11]],
+      ["Minor Hexatonic",                 [0,2,3,5,7,10]],
+      ["Major Locrian",                   [0,2,4,5,6,8,10]],
+      ["Jazz Minor #5",                   [0,2,3,5,8,9,11]],
+      ["Full Minor All Flats",            [0,2,3,5,7,8,9,10,11]],
+      ["Dorian Aeolian",                  [0,2,3,5,7,8,9,10]],
+      ["Dorian b2 b4",                    [0,1,3,4,7,9,10]],
+      ["Dorian b2 Maj7",                  [0,1,3,4,6,9,11]],
+      ["Dorian b9 #11",                   [0,1,3,6,7,9,10]],
+      ["Phrygian Hexatonic",              [0,3,5,7,8,10]],
+      ["Phrygian Aeolian b4",             [0,1,2,3,5,7,8,10]],
+      ["Phrygian b4",                     [0,1,3,4,7,8,10]],
+      ["Phrygian b4 Maj7",                [0,1,3,4,7,8,11]],
+      ["Double Phrygian",                 [0,1,3,5,6,9]],
+      ["Ultraphrygian",                   [0,1,3,4,7,8,9]],
+      ["Lydian Hexatonic",                [0,2,4,7,9,11]],
+      ["Lydian #2 Hexatonic",             [0,3,4,7,9,11]],
+      ["Lydian #2 #6",                    [0,3,4,6,7,10,11]],
+      ["Lydian Dominant b6",              [0,2,4,6,7,8,10]],
+      ["Lydian Mixolydian",               [0,2,4,5,6,7,9,10,11]],
+      ["Lydian Diminished",               [0,2,3,6,7,9,11]],
+      ["Lydian #6",                       [0,2,4,6,7,10,11]],
+      ["Lydian Augmented Dominant",       [0,2,4,6,8,9,10]],
+      ["Mixolydian Hexatonic",            [0,2,5,7,9,10]],
+      ["Mixolydian b5",                   [0,2,4,5,6,9,10]],
+      ["Mixolydian Augmented",            [0,2,4,5,8,9,10]],
+      ["Mixolydian Augmented Maj9",       [0,1,4,5,8,9,10]],
+      ["Aeolian b1",                      [0,3,4,6,8,9,11]],
+      ["Locrian Dominant",                [0,1,4,5,6,8,10]],
+      ["Locrian bb7",                     [0,1,3,5,6,8,9]],
+      ["Locrian bb3 bb7",                 [0,1,2,5,6,8,9]],
+      ["Locrian Maj7",                    [0,1,3,5,6,8,11]],
+      ["Semilocrian b4",                  [0,2,3,4,6,8,10]],
+      ["Superlocrian bb3",                [0,1,2,4,6,8,10]],
+      ["Superlocrian Maj7",               [0,1,3,4,6,8,11]],
+      ["Superlocrian bb6 bb7",            [0,1,3,4,6,7,9]],
+      ["Superlocrian #6",                 [0,1,3,4,6,9,10]],
+      ["Ultralocrian bb3",                [0,1,2,4,6,8,9]],
+      ["Harmonic Major",                  [0,2,4,5,7,8,11]],
+      ["Harmonic Major 2",                [0,2,4,5,8,9,11]],
+      ["Harmonic Minor b5",               [0,2,3,5,6,8,11]],
+      ["Harmonic Minor Inverse",          [0,1,4,5,7,9,10]],
+      ["Double Harmonic",                 [0,1,4,5,7,8,11]],
+      ["Chromatic Dorian",                [0,1,2,5,7,8,9]],
+      ["Chromatic Dorian Inverse",        [0,3,4,5,7,10,11]],
+      ["Chromatic Diatonic Dorian",       [0,1,2,3,5,7,8,9,10]],
+      ["Chromatic Phrygian",              [0,3,4,5,8,10,11]],
+      ["Chromatic Phrygian Inverse",      [0,1,2,4,7,8,9]],
+      ["Chromatic Lydian",                [0,1,4,5,6,9,11]],
+      ["Chromatic Lydian Inverse",        [0,1,3,6,7,8,11]],
+      ["Chromatic Mixolydian",            [0,1,2,5,6,7,10]],
+      ["Chromatic Mixolydian 2",          [0,1,2,4,6,7,10]],
+      ["Chromatic Mixolydian Inverse",    [0,2,5,6,7,10,11]],
+      ["Chromatic Hypodorian",            [0,2,3,4,7,8,9]],
+      ["Chromatic Hypodorian Inverse",    [0,3,4,5,8,9,10]],
+      ["Chromatic Hypolydian",            [0,1,4,6,7,8,11]],
+      ["Chromatic Hypophrygian Inverse",  [0,1,2,5,6,7,9]],
+      ["Chromatic Permutated Diatonic Dorian",[0,1,2,4,5,7,8,9,11]],
+      ["Major Minor Mixed",               [0,2,3,4,5,7,8,9,10,11]],
+      ["Minor Pentatonic with Leading Tones",[0,2,3,4,5,6,7,9,10,11]],
+      ["Leading Whole-Tone",              [0,2,4,6,8,10,11]],
+    ]},
+    { cat: "Jazz", scales: [
+      ["Blues",                     [0,3,5,6,7,10]],
+      ["Blues Heptatonic",          [0,2,3,5,6,9,10]],
+      ["Blues Heptatonic 2",        [0,3,5,6,7,9,10]],
+      ["Blues Octatonic",           [0,2,3,5,6,7,9,10]],
+      ["Blues Enneatonic",          [0,2,3,4,5,7,9,10,11]],
+      ["Blues Enneatonic 2",        [0,2,3,4,5,6,7,9,10]],
+      ["Blues Dorian Hexatonic",    [0,1,3,4,7,9]],
+      ["Blues Phrygian",            [0,1,3,5,6,7,10]],
+      ["Blues Minor Maj7",          [0,3,5,6,7,11]],
+      ["Blues Modified",            [0,2,3,5,6,7,10]],
+      ["Blues Leading Tone",        [0,3,5,6,7,10,11]],
+      ["Rock 'n Roll",              [0,3,4,5,7,9,10]],
+      ["Bebop",                     [0,2,4,5,7,9,10,11]],
+      ["Bebop Major",               [0,2,4,5,7,8,9,11]],
+      ["Bebop Major Hexatonic",     [0,2,4,7,8,9]],
+      ["Bebop Major Heptatonic",    [0,2,4,5,7,8,9]],
+      ["Bebop Minor",               [0,2,3,4,7,9,10]],
+      ["Bebop Dorian",              [0,2,3,4,5,7,9,10]],
+      ["Bebop Melodic Minor",       [0,2,3,5,7,8,9,11]],
+      ["Bebop Harmonic Minor",      [0,2,3,5,7,8,10,11]],
+      ["Bebop Half-diminished",     [0,1,3,5,6,7,8,11]],
+      ["Bebop Locrian",             [0,1,3,5,6,7,8,10]],
+      ["Bebop Chromatic",           [0,1,2,4,5,7,9,10,11]],
+    ]},
+    { cat: "Symmetric", scales: [
+      ["Whole-Tone",                    [0,2,4,6,8,10]],
+      ["Augmented",                     [0,3,4,7,8,11]],
+      ["Inverted Augmented",            [0,1,4,5,8,9]],
+      ["Diminished",                    [0,2,3,5,6,8,9,11]],
+      ["Diminished Half-tone",          [0,1,3,4,6,7,9,10]],
+      ["Chromatic",                     [0,1,2,3,4,5,6,7,8,9,10,11]],
+      ["Tritone",                       [0,1,4,6,7,10]],
+      ["Raga Neelangi",                 [0,2,3,6,8,9]],
+      ["Messiaen 2nd Mode Truncated",   [0,1,3,6,7,9]],
+      ["Messiaen 3rd Mode",             [0,2,3,4,6,7,8,10,11]],
+      ["Messiaen 4th Mode",             [0,1,2,5,6,7,8,11]],
+      ["Messiaen 4th Mode Inverse",     [0,3,4,5,6,9,10,11]],
+      ["Messiaen 5th Mode",             [0,1,5,6,7,11]],
+      ["Messiaen 5th Mode Inverse",     [0,4,5,6,10,11]],
+      ["Messiaen 6th Mode",             [0,2,4,5,6,8,10,11]],
+      ["Messiaen 6th Mode Inverse",     [0,1,2,4,6,7,8,10]],
+      ["Messiaen 7th Mode",             [0,1,2,3,5,6,7,8,9,11]],
+      ["Messiaen 7th Mode Inverse",     [0,2,3,4,5,6,8,9,10,11]],
+      ["Genus Chromaticum",             [0,1,3,4,5,7,8,9,11]],
+      ["Two-semitone Tritone",          [0,1,2,6,7,8]],
+      ["Symmetrical Decatonic",         [0,1,2,4,5,6,7,8,10,11]],
+      ["Van Der Host",                  [0,1,3,5,6,7,9,11]],
+    ]},
+    { cat: "Misc", scales: [
+      ["Algerian Octatonic",      [0,2,3,5,6,7,8,11]],
+      ["Algerian",                [0,2,3,6,7,8,11]],
+      ["Eskimo Hexatonic",        [0,2,4,6,8,9]],
+      ["Eskimo Hexatonic 2",      [0,2,4,6,8,11]],
+      ["Hamel",                   [0,1,3,5,7,8,10,11]],
+      ["Hawaiian",                [0,2,3,7,9,11]],
+      ["LG Octatonic",            [0,1,3,4,5,7,9,10]],
+      ["Pyramid Hexatonic",       [0,2,3,5,6,9]],
+      ["Nonatonic 2",             [0,1,3,4,5,6,7,9,10]],
+      ["Symmetrical Nonatonic",   [0,1,2,4,6,7,8,10,11]],
+    ]},
+  ];
+
+  const CHORD_LIBRARY = [
+    { cat: "Triads", scales: [
+      ["Major",[0,4,7]],
+      ["Minor",[0,3,7]],
+      ["Diminished",[0,3,6]],
+      ["Augmented",[0,4,8]],
+      ["Sus2",[0,2,7]],
+      ["Sus4",[0,5,7]],
+      ["Open Fifth (power chord)",[0,7]],
+      ["Major Flat Five (b5)",[0,4,6]],
+      ["Minor Sharp Five (#5)",[0,3,8]],
+      ["Phrygian Triad",[0,1,7]],
+      ["Lydian Triad",[0,6,7]],
+    ]},
+    { cat: "Sixth chords", scales: [
+      ["Major Sixth (6)",[0,4,7,9]],
+      ["Minor Sixth (min6)",[0,3,7,9]],
+      ["Sixth Sus Four (6sus4)",[0,5,7,9]],
+      ["Sixth Flat Five (6b5)",[0,4,6,9]],
+      ["Sixth Sharp Five (6#5)",[0,4,8,9]],
+      ["Major Six-Nine (6/9)",[0,2,4,7,9]],
+      ["Minor Six-Nine (min6/9)",[0,2,3,7,9]],
+    ]},
+    { cat: "Seventh chords", scales: [
+      ["Major Seventh (maj7)",[0,4,7,11]],
+      ["Dominant Seventh (7)",[0,4,7,10]],
+      ["Minor Seventh (min7)",[0,3,7,10]],
+      ["Minor Major Seventh (minMaj7)",[0,3,7,11]],
+      ["Diminished Seventh (dim7)",[0,3,6,9]],
+      ["Half-Diminished (min7b5)",[0,3,6,10]],
+      ["Augmented Major Seventh (maj7#5)",[0,4,8,11]],
+      ["Augmented Seventh (7#5)",[0,4,8,10]],
+      ["Major Seventh Flat Five (maj7b5)",[0,4,6,11]],
+      ["Diminished Major Seventh (dimMaj7)",[0,3,6,11]],
+      ["Seventh Sus Four (7sus4)",[0,5,7,10]],
+      ["Seventh Sus Two (7sus2)",[0,2,7,10]],
+      ["Major Seventh Sus Four (maj7sus4)",[0,5,7,11]],
+      ["Major Seventh Sus Two (maj7sus2)",[0,2,7,11]],
+    ]},
+    { cat: "Ninth chords", scales: [
+      ["Major Ninth (maj9)",[0,2,4,7,11]],
+      ["Dominant Ninth (9)",[0,2,4,7,10]],
+      ["Minor Ninth (min9)",[0,2,3,7,10]],
+      ["Minor Major Ninth (minMaj9)",[0,2,3,7,11]],
+      ["Dominant Flat Ninth (7b9)",[0,1,4,7,10]],
+      ["Dominant Sharp Ninth (7#9)",[0,3,4,7,10]],
+      ["Half-Diminished Ninth (min9b5)",[0,2,3,6,10]],
+      ["Diminished Ninth (dim9)",[0,2,3,6,9]],
+      ["Diminished Flat Ninth (dim7b9)",[0,1,3,6,9]],
+      ["Augmented Ninth (9#5)",[0,2,4,8,10]],
+      ["Major Ninth Sharp Five (maj9#5)",[0,2,4,8,11]],
+      ["Ninth Sus Four (9sus4)",[0,2,5,7,10]],
+      ["Add Nine (add9)",[0,2,4,7]],
+      ["Minor Add Nine (min add9)",[0,2,3,7]],
+    ]},
+    { cat: "Eleventh chords", scales: [
+      ["Major Eleventh (maj11)",[0,2,4,5,7,11]],
+      ["Dominant Eleventh (11)",[0,2,4,5,7,10]],
+      ["Minor Eleventh (min11)",[0,2,3,5,7,10]],
+      ["Minor Major Eleventh (minMaj11)",[0,2,3,5,7,11]],
+      ["Dominant Sharp Eleventh (7#11)",[0,2,4,6,7,10]],
+      ["Major Sharp Eleventh (maj7#11)",[0,2,4,6,7,11]],
+      ["Add Eleven (add11)",[0,4,5,7]],
+      ["Add Sharp Eleven (add#11)",[0,4,6,7]],
+      ["Half-Diminished Eleventh (min11b5)",[0,2,3,5,6,10]],
+    ]},
+    { cat: "Thirteenth chords", scales: [
+      ["Major Thirteenth (maj13)",[0,2,4,7,9,11]],
+      ["Dominant Thirteenth (13)",[0,2,4,7,9,10]],
+      ["Minor Thirteenth (min13)",[0,2,3,7,9,10]],
+      ["Dominant Thirteenth Flat Nine (13b9)",[0,1,4,7,9,10]],
+      ["Dominant Thirteenth Sharp Eleven (13#11)",[0,2,4,6,7,9,10]],
+    ]},
+    { cat: "Altered dominants", scales: [
+      ["Seventh Flat Five (7b5)",[0,4,6,10]],
+      ["Seventh Flat Nine Flat Five (7b9b5)",[0,1,4,6,10]],
+      ["Seventh Flat Nine Sharp Five (7b9#5)",[0,1,4,8,10]],
+      ["Seventh Sharp Nine Flat Five (7#9b5)",[0,3,4,6,10]],
+      ["Seventh Sharp Nine Sharp Five (7#9#5)",[0,3,4,8,10]],
+      ["Altered Dominant (7alt)",[0,1,3,4,6,8,10]],
+      ["Thirteenth Flat Nine (13b9 alt)",[0,1,4,6,9,10]],
+      ["Thirteenth Sharp Nine (13#9 alt)",[0,3,4,7,9,10]],
+    ]},
+    { cat: "Suspended and added tone", scales: [
+      ["Sus2 Sus4 (add both)",[0,2,5,7]],
+      ["Add Flat Nine (add b9)",[0,1,4,7]],
+      ["Add Sharp Nine (add #9)",[0,3,4,7]],
+      ["Seven Six (7/6, dominant+6)",[0,4,7,9,10]],
+    ]},
+    { cat: "Symmetric and cluster", scales: [
+      ["Whole Tone Tetrad",[0,4,8,10]],
+      ["Whole Tone Scale (hexad)",[0,2,4,6,8,10]],
+      ["Chromatic Cluster (3 semitones)",[0,1,2]],
+      ["Chromatic Cluster (4 semitones)",[0,1,2,3]],
+      ["Quartal Triad (fourths)",[0,5,10]],
+      ["Quartal Tetrad (fourths)",[0,3,5,10]],
+      ["So What Chord",[0,3,5,7,10]],
+      ["Mystic Chord (Scriabin)",[0,2,4,6,9,10]],
+      ["Tritone Stack",[0,6]],
+      ["Secundal Triad (seconds)",[0,2,4]],
+      ["Secundal Tetrad (seconds)",[0,2,4,6]],
+      ["Viennese Trichord",[0,1,6]],
+    ]},
+    { cat: "Polychords and hybrids", scales: [
+      ["Major over Minor (bitonal)",[0,3,4,7,8,11]],
+      ["Slash: Minor Triad over Flat Six Bass",[0,3,7,8]],
+      ["Hendrix Chord (7#9)",[0,3,4,7,10]],
+      ["Elektra Chord",[0,1,3,4,7,9]],
+      ["Farben Chord (Schoenberg)",[0,1,4,8]],
+      ["Contrary Motion Chord",[0,2,4,6,8]],
+      ["Tristan Chord",[0,3,6,10]],
+      ["Magic Chord (Bartok)",[0,1,4,6,7,10]],
+      ["Petrushka Chord",[0,4,6,10]],
+    ]},
+    { cat: "Classical chromatic harmony", scales: [
+      ["Italian Augmented Sixth (It+6)",[0,4,10]],
+      ["French Augmented Sixth (Fr+6)",[0,4,6,10]],
+    ]},
+  ];
+
+  // ============================================================
+  // State
+  // ============================================================
+
+  const state = {
+    rootPc: 0,
+    customSteps: "0 2 4 5 7 9 11",
+    customShape: "0 4 7 9",
+    transposeWholeChord: true,
+
+    melodyStr: "72 74 76 77 79 81 83 84",
+    dropV2: false,
+    dropV3: false,
+    dropV4: false,
+
+    bpm: 96,
+    isPlaying: false,
+    playingIndex: -1,
+
+    results: [],
+
+    mode: "realtime", // "written" | "realtime"
+    realtimeActive: {},  // note -> { result, chord, freqs } currently sounding (held down)
+
+    scaleBrowserSearch: "",
+    scaleBrowserOpenCats: { "Major and minor": true }, // default scale's category starts open
+    selectedScaleName: "Ionian (Major)",  // name of the last-picked library scale, for highlighting
+
+    shapeBrowserSearch: "",
+    shapeBrowserOpenCats: { "Sixth chords": true }, // default shape's category starts open
+    selectedShapeName: "Major Sixth (6)",
+  };
+
+  const VOICE_COUNT = 5;
+
+  function getScale() {
+    const steps = parseDegreesString(state.customSteps);
+    return { root: state.rootPc, steps: steps.length ? steps : [0] };
+  }
+
+  function getBaseShape() {
+    const shape = parseDegreesString(state.customShape);
+    return shape.length ? shape : [0];
+  }
+
+  function getMelody() {
+    return parseMelodyString(state.melodyStr);
+  }
+
+  function harmonizeSingleNote(note) {
+    const scale = getScale();
+    const baseShape = getBaseShape();
+    try {
+      const raw = harmonizeMelodyNote(note, scale, baseShape, VOICE_COUNT - 1, state.transposeWholeChord);
+      return applyDrop(raw, { v2: state.dropV2, v3: state.dropV3, v4: state.dropV4 });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function recompute() {
+    const melody = getMelody();
+    const scale = getScale();
+    const baseShape = getBaseShape();
+    if (melody.length === 0) {
+      state.results = [];
+    } else {
+      try {
+        const raw = harmonizeMelody(melody, scale, baseShape, VOICE_COUNT - 1, state.transposeWholeChord);
+        state.results = raw.map((r) =>
+          applyDrop(r, { v2: state.dropV2, v3: state.dropV3, v4: state.dropV4 })
+        );
+      } catch (e) {
+        state.results = [];
+      }
+    }
+  }
+
+  // ============================================================
+  // Tone.js / audio
+  // ============================================================
+
+  let synth = null;
+  let toneReady = false;
+  let playTimeouts = [];
+
+  function checkToneReady() {
+    if (window.Tone) {
+      toneReady = true;
+      document.getElementById("synthLoading").style.display = "none";
+    } else {
+      setTimeout(checkToneReady, 150);
+    }
+  }
+  checkToneReady();
+
+  function ensureSynth() {
+    if (!window.Tone) return null;
+    if (!synth) {
+      synth = new window.Tone.PolySynth(window.Tone.Synth, {
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0.4, release: 0.8 },
+      }).toDestination();
+      synth.volume.value = -8;
+    }
+    return synth;
+  }
+
+  function stopPlayback() {
+    playTimeouts.forEach((t) => clearTimeout(t));
+    playTimeouts = [];
+    state.isPlaying = false;
+    state.playingIndex = -1;
+    renderPlayButton();
+    renderChords();
+    renderKeyboardHighlight();
+  }
+
+  async function playAll() {
+    if (!toneReady || state.results.length === 0) return;
+    await window.Tone.start();
+    const s = ensureSynth();
+    stopPlayback();
+    state.isPlaying = true;
+    renderPlayButton();
+
+    const stepMs = (60 / state.bpm) * 1000;
+    state.results.forEach((r, i) => {
+      const t = setTimeout(() => {
+        state.playingIndex = i;
+        renderChords();
+        renderKeyboardHighlight();
+        const chord = r.droppedChord || r.fullChord;
+        const freqs = chord.map((n) => window.Tone.Frequency(n, "midi").toFrequency());
+        s.triggerAttackRelease(freqs, stepMs / 1000 - 0.05);
+        if (i === state.results.length - 1) {
+          const endT = setTimeout(() => {
+            state.isPlaying = false;
+            state.playingIndex = -1;
+            renderPlayButton();
+            renderChords();
+            renderKeyboardHighlight();
+          }, stepMs);
+          playTimeouts.push(endT);
+        }
+      }, i * stepMs);
+      playTimeouts.push(t);
+    });
+  }
+
+  async function playOne(r) {
+    if (!toneReady) return;
+    await window.Tone.start();
+    const s = ensureSynth();
+    const chord = r.droppedChord || r.fullChord;
+    const freqs = chord.map((n) => window.Tone.Frequency(n, "midi").toFrequency());
+    s.triggerAttackRelease(freqs, 1.1);
+  }
+
+  // ============================================================
+  // Real-time mode: note on/off for held-key chords
+  // ============================================================
+
+  async function realtimeNoteOn(note) {
+    if (!toneReady) return;
+    if (state.realtimeActive[note]) return; // already sounding (avoid re-trigger on key repeat)
+    await window.Tone.start();
+    const s = ensureSynth();
+    const result = harmonizeSingleNote(note);
+    if (!result) return;
+    const chord = result.droppedChord || result.fullChord;
+    const freqs = chord.map((n) => window.Tone.Frequency(n, "midi").toFrequency());
+
+    s.triggerAttack(freqs);
+
+    state.realtimeActive[note] = { result, chord, freqs };
+    renderRealtimeReadout(result);
+    highlightKey(note, true);
+    renderRealtimeKeyboardHighlight();
+    renderRealtimeStack();
+  }
+
+  function realtimeNoteOff(note) {
+    const active = state.realtimeActive[note];
+    highlightKey(note, false);
+    if (!active) return;
+    const s = ensureSynth();
+    if (s) s.triggerRelease(active.freqs);
+    delete state.realtimeActive[note];
+    renderRealtimeKeyboardHighlight();
+    renderRealtimeStack();
+  }
+
+  function renderRealtimeReadout(result) {
+    const el = document.getElementById("realtimeChordReadout");
+    if (!el) return;
+    const chord = result.droppedChord || result.fullChord;
+    el.textContent = chord.map((n) => midiToName(n)).join("  ·  ");
+  }
+
+  function highlightKey(note, on) {
+    const el = document.querySelector(`.white-key[data-note="${note}"], .black-key[data-note="${note}"]`);
+    if (el) el.classList.toggle("pressed", on);
+  }
+
+  function renderRealtimeKeyboardHighlight() {
+    const notesToHighlight = new Set();
+    Object.values(state.realtimeActive).forEach(({ chord }) => chord.forEach((n) => notesToHighlight.add(n)));
+    document.querySelectorAll(".white-key, .black-key").forEach((el) => {
+      const n = parseInt(el.dataset.note, 10);
+      el.classList.toggle("active", notesToHighlight.has(n));
+    });
+  }
+
+  // Shows the chord(s) currently being held down. To keep the window from
+  // jumping around during staccato playing, the results/table panels stay
+  // mounted at a fixed size at all times in real-time mode; only their
+  // contents update, and the last-held chord stays visible (dimmed) after
+  // release instead of the panel vanishing.
+  let lastRealtimeResults = [];
+
+  function renderRealtimeStack() {
+    const emptyState = document.getElementById("realtimeEmptyState");
+    const resultsPanel = document.getElementById("resultsPanel");
+    const tablePanel = document.getElementById("tablePanel");
+
+    const activeResults = Object.values(state.realtimeActive).map((a) => a.result);
+
+    // the results panel (with its legend) stays visible at all times in
+    // real-time mode, even before the first note has ever been played
+    emptyState.style.display = "none";
+    resultsPanel.style.display = "block";
+    tablePanel.style.display = activeResults.length || lastRealtimeResults.length ? "block" : "none";
+
+    if (activeResults.length === 0) {
+      resultsPanel.classList.add("idle");
+      document.getElementById("realtimeChordReadout").textContent = "";
+      // keep showing the last chord played, just visually dimmed, so the
+      // panel content doesn't disappear/reappear between staccato notes
+      renderChordsFromList(lastRealtimeResults);
+      renderTableFromList(lastRealtimeResults);
+      return;
+    }
+
+    resultsPanel.classList.remove("idle");
+    lastRealtimeResults = activeResults;
+    renderChordsFromList(activeResults);
+    renderTableFromList(activeResults);
+  }
+
+  // ============================================================
+  // Piano keyboard
+  // ============================================================
+
+  const START_NOTE = 48;
+  const END_NOTE = 84;
+  const WHITE_KEY_PCS = [0, 2, 4, 5, 7, 9, 11];
+  const BLACK_OFFSET_MAP = { 1: 0.68, 3: 0.72, 6: 0.66, 8: 0.7, 10: 0.74 };
+
+  function isWhitePc(n) { return WHITE_KEY_PCS.includes(mod(n, 12)); }
+
+  function buildPiano() {
+    const piano = document.getElementById("piano");
+    piano.innerHTML = "";
+
+    const keys = [];
+    for (let n = START_NOTE; n <= END_NOTE; n++) keys.push(n);
+    const whiteKeys = keys.filter(isWhitePc);
+    const whiteKeyWidth = 100 / whiteKeys.length;
+
+    whiteKeys.forEach((n, i) => {
+      const el = document.createElement("div");
+      el.className = "white-key";
+      el.dataset.note = n;
+      el.style.left = `${i * whiteKeyWidth}%`;
+      el.style.width = `${whiteKeyWidth}%`;
+      el.title = midiToName(n);
+      if (mod(n, 12) === 0) el.textContent = `C${Math.floor(n / 12) - 1}`;
+      el.addEventListener("mousedown", () => keyDown(n, el));
+      el.addEventListener("mouseup", () => keyUp(n, el));
+      el.addEventListener("mouseleave", () => keyUp(n, el));
+      piano.appendChild(el);
+    });
+
+    keys.filter((n) => !isWhitePc(n)).forEach((n) => {
+      const whiteIdx = whiteKeys.filter((w) => w < n).length - 1;
+      const pc = mod(n, 12);
+      const offset = BLACK_OFFSET_MAP[pc] || 0.7;
+      const left = (whiteIdx + offset) * whiteKeyWidth;
+      const el = document.createElement("div");
+      el.className = "black-key";
+      el.dataset.note = n;
+      el.style.left = `${left}%`;
+      el.style.width = `${whiteKeyWidth * 0.58}%`;
+      el.title = midiToName(n);
+      el.addEventListener("mousedown", () => keyDown(n, el));
+      el.addEventListener("mouseup", () => keyUp(n, el));
+      el.addEventListener("mouseleave", () => keyUp(n, el));
+      piano.appendChild(el);
+    });
+  }
+
+  function keyDown(n, el) {
+    if (state.mode === "realtime") {
+      realtimeNoteOn(n);
+      return;
+    }
+    el.classList.add("pressed");
+    addNoteFromKeyboard(n);
+  }
+  function keyUp(n, el) {
+    if (state.mode === "realtime") {
+      realtimeNoteOff(n);
+      return;
+    }
+    el.classList.remove("pressed");
+  }
+
+  function addNoteFromKeyboard(note) {
+    const trimmed = state.melodyStr.trim();
+    state.melodyStr = trimmed ? `${trimmed} ${note}` : `${note}`;
+    document.getElementById("melodyInput").value = state.melodyStr;
+    recompute();
+    renderAll();
+  }
+
+  // ============================================================
+  // Computer (QWERTY) keyboard -> notes, for real-time mode
+  // ============================================================
+
+  // Semitone offsets from a movable "base" note, laid out like a
+  // one-octave-plus piano across two physical rows:
+  //   white keys: A S D F G H J K   (0 2 4 5 7 9 11 12)
+  //   black keys: W E   T Y U        (1 3   6 8 10)
+  const QWERTY_NOTE_MAP = {
+    KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4,
+    KeyF: 5, KeyT: 6, KeyG: 7, KeyY: 8, KeyH: 9,
+    KeyU: 10, KeyJ: 11, KeyK: 12,
+  };
+
+  let qwertyBaseNote = 60; // C4; shifted by Z / X
+  const qwertyActiveCodes = {}; // code -> note, so keyup releases the exact note that was played
+
+  function computerKeyToNote(code) {
+    if (!(code in QWERTY_NOTE_MAP)) return null;
+    return qwertyBaseNote + QWERTY_NOTE_MAP[code];
+  }
+
+  function renderOctaveReadout() {
+    const el = document.getElementById("realtimeOctaveReadout");
+    if (!el) return;
+    el.textContent = `keyboard base: ${midiToName(qwertyBaseNote)}`;
+  }
+
+  function handleQwertyKeyDown(e) {
+    if (state.mode !== "realtime") return;
+    if (e.repeat) return; // ignore OS key-repeat, avoid re-triggering
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) return;
+
+    if (e.code === "KeyZ") {
+      qwertyBaseNote = Math.max(24, qwertyBaseNote - 12);
+      renderOctaveReadout();
+      return;
+    }
+    if (e.code === "KeyX") {
+      qwertyBaseNote = Math.min(96, qwertyBaseNote + 12);
+      renderOctaveReadout();
+      return;
+    }
+
+    const note = computerKeyToNote(e.code);
+    if (note === null) return;
+    e.preventDefault();
+    qwertyActiveCodes[e.code] = note;
+    realtimeNoteOn(note);
+  }
+
+  function handleQwertyKeyUp(e) {
+    if (!(e.code in qwertyActiveCodes)) return;
+    const note = qwertyActiveCodes[e.code];
+    delete qwertyActiveCodes[e.code];
+    realtimeNoteOff(note);
+  }
+
+  function renderKeyboardHighlight() {
+    const highlight =
+      state.playingIndex >= 0 && state.results[state.playingIndex]
+        ? state.results[state.playingIndex].droppedChord || state.results[state.playingIndex].fullChord
+        : [];
+    document.querySelectorAll(".white-key, .black-key").forEach((el) => {
+      const n = parseInt(el.dataset.note, 10);
+      el.classList.toggle("active", highlight.includes(n));
+    });
+  }
+
+  // ============================================================
+  // Rendering
+  // ============================================================
+
+  function populateSelect(select, items, getLabel) {
+    select.innerHTML = "";
+    items.forEach((item, i) => {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = getLabel(item);
+      select.appendChild(opt);
+    });
+  }
+
+  function renderControls() {
+    ["dropV2", "dropV3", "dropV4", "transposeWholeChord"].forEach((key, idx) => {
+      const el = document.getElementById(`${key}Toggle`);
+      const checked = state[key];
+      el.classList.toggle("checked", checked);
+      el.querySelector(".switch").classList.toggle("checked", checked);
+    });
+
+    renderScaleBrowser();
+    renderShapeBrowser();
+  }
+
+  // Generic accordion renderer shared by the scale and chord/shape
+  // browsers: categories are "folders" that expand/collapse; a text
+  // search filters items by name across all categories and auto-expands
+  // any category with a match. `library` is [{cat, scales:[[name,intervals],...]}, ...].
+  function renderAccordion(rootId, library, search, openCats, selectedName, onPick, emptyText) {
+    const root = document.getElementById(rootId);
+    const q = search.trim().toLowerCase();
+    root.innerHTML = "";
+
+    library.forEach(({ cat, scales }) => {
+      const filtered = q ? scales.filter(([name]) => name.toLowerCase().includes(q)) : scales;
+      if (q && filtered.length === 0) return;
+
+      const isOpen = q ? true : !!openCats[cat];
+
+      const catEl = document.createElement("div");
+      catEl.className = "scale-cat" + (isOpen ? " open" : "");
+
+      const header = document.createElement("div");
+      header.className = "scale-cat-header";
+      header.innerHTML = `<span class="scale-cat-arrow">▶</span><span>${cat}</span><span class="scale-cat-count">${filtered.length}</span>`;
+      header.addEventListener("click", () => {
+        openCats[cat] = !openCats[cat];
+        renderAccordion(rootId, library, search, openCats, selectedName, onPick, emptyText);
+      });
+      catEl.appendChild(header);
+
+      const list = document.createElement("div");
+      list.className = "scale-cat-list";
+      filtered.forEach(([name, steps]) => {
+        const item = document.createElement("div");
+        item.className = "scale-item" + (selectedName === name ? " selected" : "");
+        item.innerHTML = `<span class="scale-item-name">${name}</span><span class="scale-item-degrees">${steps.join(" ")}</span>`;
+        item.addEventListener("click", () => onPick(name, steps));
+        list.appendChild(item);
+      });
+      catEl.appendChild(list);
+
+      root.appendChild(catEl);
+    });
+
+    if (root.children.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "sub-note";
+      empty.style.padding = "10px";
+      empty.textContent = emptyText;
+      root.appendChild(empty);
+    }
+  }
+
+  function renderScaleBrowser() {
+    renderAccordion(
+      "scaleBrowser",
+      SCALE_LIBRARY,
+      state.scaleBrowserSearch,
+      state.scaleBrowserOpenCats,
+      state.selectedScaleName,
+      (name, steps) => {
+        state.customSteps = steps.join(" ");
+        state.selectedScaleName = name;
+        document.getElementById("scaleCustomInput").value = state.customSteps;
+        recompute();
+        renderAll();
+      },
+      "no scales match"
+    );
+  }
+
+  function renderShapeBrowser() {
+    renderAccordion(
+      "shapeBrowser",
+      CHORD_LIBRARY,
+      state.shapeBrowserSearch,
+      state.shapeBrowserOpenCats,
+      state.selectedShapeName,
+      (name, steps) => {
+        state.customShape = steps.join(" ");
+        state.selectedShapeName = name;
+        document.getElementById("shapeCustomInput").value = state.customShape;
+        recompute();
+        renderAll();
+      },
+      "no chords match"
+    );
+  }
+
+  function renderPlayButton() {
+    const btn = document.getElementById("playBtn");
+    btn.textContent = state.isPlaying ? "Stop" : "Play all";
+    btn.classList.toggle("playing", state.isPlaying);
+    btn.disabled = state.results.length === 0;
+  }
+
+  function renderChords() {
+    const emptyState = document.getElementById("emptyState");
+    const resultsPanel = document.getElementById("resultsPanel");
+    const tablePanel = document.getElementById("tablePanel");
+
+    if (state.results.length === 0) {
+      emptyState.style.display = "block";
+      resultsPanel.style.display = "none";
+      tablePanel.style.display = "none";
+      return;
+    }
+
+    emptyState.style.display = "none";
+    resultsPanel.style.display = "block";
+    tablePanel.style.display = "block";
+
+    renderChordsFromList(state.results);
+    renderTable();
+  }
+
+  function renderChordsFromList(list) {
+    const allNotesFlat = [];
+    list.forEach((r) => (r.droppedChord || r.fullChord).forEach((n) => allNotesFlat.push(n)));
+    const minNote = allNotesFlat.length ? Math.min(...allNotesFlat) - 2 : 48;
+    const maxNote = allNotesFlat.length ? Math.max(...allNotesFlat) + 2 : 84;
+    const range = maxNote - minNote || 1;
+    const heightPx = 240;
+    const yFor = (n) => heightPx - ((n - minNote) / range) * heightPx;
+
+    const chordRow = document.getElementById("chordRow");
+    chordRow.innerHTML = "";
+
+    list.forEach((r, i) => {
+      const chord = r.droppedChord || r.fullChord;
+      const melodyNote = r.melodyNote;
+      const bassDoublingValue = r.fullChord[r.fullChord.length - 1];
+      const droppedValues = r.droppedNotes || [];
+
+      const col = document.createElement("div");
+      col.className = "chord-col";
+      col.title = "click to hear this chord";
+      col.addEventListener("click", () => playOne(r));
+
+      const inner = document.createElement("div");
+      inner.className = "chord-col-inner" + (state.playingIndex === i ? " playing" : "");
+
+      chord.forEach((n) => {
+        const isMelody = n === melodyNote && chord.indexOf(n) === 0;
+        const isBassDoubling = n === bassDoublingValue && !isMelody;
+        const isDropped = droppedValues.includes(n);
+        let bg = "var(--note-inner)";
+        if (isMelody) bg = "var(--accent)";
+        else if (isDropped) bg = "var(--note-dropped)";
+        else if (isBassDoubling) bg = "var(--note-doubling)";
+
+        const bar = document.createElement("div");
+        bar.className = "note-bar";
+        bar.style.top = `${yFor(n) - 6}px`;
+        bar.style.background = bg;
+        if (isMelody) bar.style.boxShadow = "0 0 0 2px var(--accent-soft)";
+        bar.title = midiToName(n);
+        bar.textContent = midiToName(n);
+        inner.appendChild(bar);
+      });
+
+      col.appendChild(inner);
+
+      const idx = document.createElement("div");
+      idx.className = "col-index";
+      idx.textContent = i + 1;
+      col.appendChild(idx);
+
+      if (r.tritoneCorrections.length > 0) {
+        const tri = document.createElement("div");
+        tri.className = "col-tritone";
+        tri.title = "Tritone correction";
+        tri.textContent = r.tritoneCorrections.map((c) => `${midiToName(c.from)}→${midiToName(c.to)}`).join(", ");
+        col.appendChild(tri);
+      }
+
+      if (r.alteration) {
+        const alt = document.createElement("div");
+        alt.className = "col-alteration";
+        const sign = r.alteration > 0 ? "+" : "";
+        alt.title = "Out-of-scale melody note, harmonized as an alteration of the nearest in-scale chord";
+        alt.textContent = `alt ${sign}${r.alteration}`;
+        col.appendChild(alt);
+      }
+
+      const method = document.createElement("div");
+      method.className = "col-method " + (r.method === "baseShape" ? "base" : "thirds");
+      method.textContent = r.method === "baseShape" ? "base shape" : "thirds";
+      col.appendChild(method);
+
+      chordRow.appendChild(col);
+    });
+
+  }
+
+  function renderTable() {
+    renderTableFromList(state.results);
+  }
+
+  function renderTableFromList(list) {
+    const tableBox = document.getElementById("tableBox");
+    tableBox.innerHTML = "";
+    list.forEach((r, i) => {
+      const row = document.createElement("div");
+      row.className = "table-row";
+
+      const idx = document.createElement("span");
+      idx.className = "table-idx";
+      idx.textContent = i + 1;
+      row.appendChild(idx);
+
+      const mel = document.createElement("span");
+      mel.className = "table-melody";
+      mel.textContent = `${midiToName(r.melodyNote)} (${r.melodyNote})`;
+      row.appendChild(mel);
+
+      const method = document.createElement("span");
+      method.className = "table-method";
+      method.textContent = r.method === "baseShape" ? "base shape" : "thirds";
+      row.appendChild(method);
+
+      const notes = document.createElement("span");
+      notes.textContent = (r.droppedChord || r.fullChord).map((n) => `${midiToName(n)}(${n})`).join("  ");
+      row.appendChild(notes);
+
+      if (r.alteration) {
+        const alt = document.createElement("span");
+        alt.style.color = "var(--note-alt)";
+        const sign = r.alteration > 0 ? "+" : "";
+        alt.textContent = `alt ${sign}${r.alteration}`;
+        row.appendChild(alt);
+      }
+
+      tableBox.appendChild(row);
+    });
+  }
+
+  function renderAll() {
+    renderControls();
+    renderPlayButton();
+    renderModeUI();
+    if (state.mode === "written") {
+      renderChords();
+      renderKeyboardHighlight();
+    } else {
+      renderRealtimeStack();
+      renderRealtimeKeyboardHighlight();
+    }
+  }
+
+  function renderModeUI() {
+    document.getElementById("modeWrittenTab").classList.toggle("active", state.mode === "written");
+    document.getElementById("modeRealtimeTab").classList.toggle("active", state.mode === "realtime");
+    document.getElementById("writtenModeControls").style.display = state.mode === "written" ? "block" : "none";
+    document.getElementById("playbackControls").style.display = state.mode === "written" ? "block" : "none";
+    document.getElementById("realtimeModeControls").style.display = state.mode === "realtime" ? "flex" : "none";
+
+    if (state.mode === "realtime") renderOctaveReadout();
+  }
+
+  function setMode(mode) {
+    if (state.mode === mode) return;
+    stopPlayback();
+    releaseAllRealtimeNotes();
+    lastRealtimeResults = [];
+    state.mode = mode;
+    renderAll();
+  }
+
+  function releaseAllRealtimeNotes() {
+    Object.keys(state.realtimeActive).forEach((noteStr) => realtimeNoteOff(parseInt(noteStr, 10)));
+    document.querySelectorAll(".white-key.pressed, .black-key.pressed").forEach((el) => el.classList.remove("pressed"));
+  }
+
+  // ============================================================
+  // Wire up controls
+  // ============================================================
+
+  function init() {
+    populateSelect(document.getElementById("rootSelect"), ROOT_NAMES, (n) => n);
+
+    document.getElementById("rootSelect").addEventListener("change", (e) => {
+      state.rootPc = parseInt(e.target.value, 10);
+      recompute();
+      renderAll();
+    });
+
+    document.getElementById("scaleCustomInput").value = state.customSteps;
+    document.getElementById("scaleCustomInput").addEventListener("input", (e) => {
+      state.customSteps = e.target.value;
+      state.selectedScaleName = null;
+      recompute();
+      renderAll();
+    });
+
+    document.getElementById("scaleSearchInput").addEventListener("input", (e) => {
+      state.scaleBrowserSearch = e.target.value;
+      renderScaleBrowser();
+    });
+
+    document.getElementById("shapeCustomInput").value = state.customShape;
+    document.getElementById("shapeCustomInput").addEventListener("input", (e) => {
+      state.customShape = e.target.value;
+      state.selectedShapeName = null;
+      recompute();
+      renderAll();
+    });
+
+    document.getElementById("shapeSearchInput").addEventListener("input", (e) => {
+      state.shapeBrowserSearch = e.target.value;
+      renderShapeBrowser();
+    });
+
+    [["dropV2", "dropV2Toggle"], ["dropV3", "dropV3Toggle"], ["dropV4", "dropV4Toggle"], ["transposeWholeChord", "transposeWholeChordToggle"]].forEach(([key, id]) => {
+      document.getElementById(id).addEventListener("click", () => {
+        state[key] = !state[key];
+        recompute();
+        renderAll();
+      });
+    });
+
+    document.getElementById("bpm").addEventListener("change", (e) => {
+      const v = parseInt(e.target.value, 10);
+      state.bpm = Math.max(30, Math.min(220, isNaN(v) ? 96 : v));
+      e.target.value = state.bpm;
+    });
+
+    document.getElementById("melodyInput").value = state.melodyStr;
+    document.getElementById("melodyInput").addEventListener("input", (e) => {
+      state.melodyStr = e.target.value;
+      recompute();
+      renderAll();
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      state.melodyStr = "";
+      document.getElementById("melodyInput").value = "";
+      recompute();
+      renderAll();
+    });
+
+    document.getElementById("playBtn").addEventListener("click", () => {
+      if (state.isPlaying) stopPlayback();
+      else playAll();
+    });
+
+    document.getElementById("modeWrittenTab").addEventListener("click", () => setMode("written"));
+    document.getElementById("modeRealtimeTab").addEventListener("click", () => setMode("realtime"));
+
+    document.getElementById("themeToggle").addEventListener("click", () => {
+      const isLight = document.documentElement.getAttribute("data-theme") === "light";
+      const next = isLight ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+      document.getElementById("themeToggleLabel").textContent = next;
+    });
+
+    window.addEventListener("keydown", handleQwertyKeyDown);
+    window.addEventListener("keyup", handleQwertyKeyUp);
+    window.addEventListener("blur", releaseAllRealtimeNotes);
+
+    buildPiano();
+    recompute();
+    renderAll();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
